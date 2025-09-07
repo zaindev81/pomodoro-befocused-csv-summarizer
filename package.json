@@ -1,0 +1,16 @@
+{
+  "name": "pomodoro-befocused-csv-summarizer",
+  "version": "1.0.0",
+  "description": "Summarize Pomodoro BeFocused CSV logs by date and task",
+  "main": "summarize.ts",
+  "dependencies": {
+    "csv-parser": "^3.2.0",
+    "dayjs": "^1.11.18"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT"
+}
