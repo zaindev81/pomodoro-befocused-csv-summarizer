@@ -2,10 +2,13 @@
   "name": "pomodoro-befocused-csv-summarizer",
   "version": "1.0.0",
   "description": "Summarize Pomodoro BeFocused CSV logs by date and task",
-  "main": "summarize.ts",
+  "main": "main.ts",
   "dependencies": {
     "csv-parser": "^3.2.0",
     "dayjs": "^1.11.18"
+  },
+  "scripts": {
+    "start": "npx tsx main.ts"
   },
   "devDependencies": {
     "@types/node": "^24.3.1"

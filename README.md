@@ -32,7 +32,7 @@ Date,Assigned task,Duration
 ## Install
 
 ```bash
-npm i
+npm install
 ```
 
 ## Usage
@@ -40,9 +40,14 @@ npm i
 ### Run
 
 ```bash
-npx tsx summarize.ts            # reads BeFocused.csv in CWD
-npx tsx summarize.ts ./logs.csv # custom input file
-npx tsx summarize.ts ./logs.csv 2025-11-15  # filter one date
+# reads BeFocused.csv in CWD
+npm start
+
+# custom input file
+npm start ./output.csv
+
+# filter one date
+npm start ./output.csv 2025-11-15
 ```
 
 The script writes `output.csv` alongside your working directory and logs:
@@ -73,6 +78,8 @@ npx tsx summarize.ts [INPUT_FILE] [FILTER_DATE]
 * **Empty output**: Make sure headers match exactly and dates conform to one of the supported formats.
 * **Wrong totals**: Verify `Duration` is numeric minutes in the source CSV.
 
+---
+
 ## License
 
-MIT
+MIT License
