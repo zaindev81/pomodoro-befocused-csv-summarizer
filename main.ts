@@ -15,6 +15,7 @@ interface CsvRow {
 
 const DEFAULT_INPUT_FILENAME = "BeFocused.csv";
 const OUTPUT_FILENAME = "output.csv";
+const DEFAULT_OUTPUT_LINES = 500;
 
 function normalizeDate (s: string) {
   return s
@@ -26,6 +27,7 @@ function normalizeDate (s: string) {
 async function main() {
   const inputArg = process.argv[2] || DEFAULT_INPUT_FILENAME;
   const filterDateArg = process.argv[3] || null;
+  const lineArg = process.argv[4] || DEFAULT_OUTPUT_LINES
 
   const INPUT_FILE = path.isAbsolute(inputArg)
     ? inputArg
@@ -78,8 +80,7 @@ async function main() {
 
         fs.writeFileSync(OUTPUT_FILE, header + lines);
         console.log(`The summary has been saved to: ${OUTPUT_FILE}`);
-
-        console.log("\n=== Last 500 Lines ===\n" + lines.slice(-500));
+        console.log(`\n=== Last ${lineArg} Lines ===\n${lines.slice(Number(lineArg) * -1)}`);
 
         resolve();
       })

@@ -48,6 +48,9 @@ npm start ./output.csv
 
 # filter one date
 npm start ./output.csv 2025-11-15
+
+# output line
+npm start ./output.csv 2025-11-15 500
 ```
 
 The script writes `output.csv` alongside your working directory and logs:
