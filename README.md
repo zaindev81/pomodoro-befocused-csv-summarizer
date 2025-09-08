@@ -2,11 +2,17 @@
 
 Summarize **BeFocused** export CSV logs by **date and task**, producing a clean `output.csv`.
 
+## Features
+
 * Parses timestamps like `15 Nov 2025 at 4:45:12 AM`
 * Normalizes weird spaces (non-breaking, narrow no-break)
 * Aggregates `Duration` (minutes) by **Date + Assigned task**
-* Optional filter for a single date (`YYYY-MM-DD`)
-* Outputs: `Date,Assigned task,Duration`
+* Optional date filtering with flexible options:
+  - Specific dates (`YYYY-MM-DD`)
+  - `today` for current date
+  - `yesterday` for previous date
+* Configurable output display lines
+* Outputs clean CSV: `Date,Assigned task,Duration`
 
 ## Input CSV (expected headers)
 
@@ -37,36 +43,45 @@ npm install
 
 ## Usage
 
-### Run
+### Basic Usage
 
 ```bash
-# reads BeFocused.csv in CWD
+# Process BeFocused.csv in current directory (default behavior)
 npm start
 
-# custom input file
-npm start ./output.csv
+# Specify all options with full names
+npm start -- --input mydata.csv --output result.csv --filter-date 2025-09-08 --lines 100
 
-# filter one date
-npm start ./output.csv 2025-11-15
+# Specify custom input/output files and date filter
+npm start -- -i mydata.csv -o result.csv -d 2025-09-08 -l 100
 
-# output line
-npm start ./output.csv 2025-11-15 500
+# Filter for today's data only
+npm start -- -i mydata.csv -o result.csv -d today -l 100
+
+# Filter for yesterday's data only
+npm start -- -i mydata.csv -o result.csv -d yesterday -l 100
 ```
 
-The script writes `output.csv` alongside your working directory and logs:
+### Command Line Options
+
+| Option | Short | Description | Default |
+|--------|-------|-------------|---------|
+| `--input` | `-i` | Input CSV file path | `BeFocused.csv` |
+| `--output` | `-o` | Output CSV file path | `output.csv` |
+| `--filter-date` | `-d` | Filter by date (`YYYY-MM-DD`, `today`, or `yesterday`) | No filter |
+| `--lines` | `-l` | Number of lines to display at the end | `500` |
+| `--help` | `-h` | Display help information | - |
+
+The script writes the summary to the specified output file (default: `output.csv`) and displays:
 
 ```
 The summary has been saved to: /absolute/path/output.csv
-```
 
-## CLI
-
+=== Last 500 Lines ===
+2025-11-15,Task A,120
+2025-11-15,Task B,90
+...
 ```
-npx tsx summarize.ts [INPUT_FILE] [FILTER_DATE]
-```
-
-* `INPUT_FILE` (optional): path to CSV. Defaults to `BeFocused.csv`.
-* `FILTER_DATE` (optional): `YYYY-MM-DD`. When provided, only rows matching that date are aggregated.
 
 ## Notes on parsing
 

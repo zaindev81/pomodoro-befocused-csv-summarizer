@@ -3,6 +3,7 @@ import path from "node:path";
 import csv from "csv-parser";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
+import { Command } from "commander";
 
 dayjs.extend(customParseFormat);
 
@@ -14,25 +15,31 @@ interface CsvRow {
 }
 
 const DEFAULT_INPUT_FILENAME = "BeFocused.csv";
-const OUTPUT_FILENAME = "output.csv";
+const DEFAULT_OUTPUT_FILENAME = "output.csv";
 const DEFAULT_OUTPUT_LINES = 500;
 
-function normalizeDate (s: string) {
+function normalizeDate(s: string): string {
   return s
     .replace(/\u202F|\u00A0/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
 
-async function main() {
-  const inputArg = process.argv[2] || DEFAULT_INPUT_FILENAME;
-  const filterDateArg = process.argv[3] || null;
-  const lineArg = process.argv[4] || DEFAULT_OUTPUT_LINES
+interface ProcessOptions {
+  input: string;
+  output: string;
+  filterDate?: string;
+  lines: number;
+}
 
-  const INPUT_FILE = path.isAbsolute(inputArg)
-    ? inputArg
-    : path.resolve(process.cwd(), inputArg);
-  const OUTPUT_FILE = path.resolve(process.cwd(), OUTPUT_FILENAME);
+async function processCsv(options: ProcessOptions): Promise<void> {
+  const INPUT_FILE = path.isAbsolute(options.input)
+    ? options.input
+    : path.resolve(process.cwd(), options.input);
+
+  const OUTPUT_FILE = path.isAbsolute(options.output)
+    ? options.output
+    : path.resolve(process.cwd(), options.output);
 
   const summary: Record<string, number> = {};
 
@@ -62,10 +69,11 @@ async function main() {
 
         const date = d.format("YYYY-MM-DD");
 
-        if (filterDateArg && date !== filterDateArg) return;
+        if (options.filterDate && date !== options.filterDate) return;
 
         const task = row["Assigned task"]?.trim() || "Unknown";
         const durationNum = Number(row["Duration"]);
+
         if (!Number.isFinite(durationNum)) return;
 
         const key = `${date},${task}`;
@@ -79,8 +87,13 @@ async function main() {
           .join("\n");
 
         fs.writeFileSync(OUTPUT_FILE, header + lines);
+
         console.log(`The summary has been saved to: ${OUTPUT_FILE}`);
-        console.log(`\n=== Last ${lineArg} Lines ===\n${lines.slice(Number(lineArg) * -1)}`);
+
+        const allLines = lines.split('\n');
+        const displayLines = allLines.slice(-options.lines);
+        console.log(`\n=== Last ${options.lines} Lines ===`);
+        console.log(displayLines.join('\n'));
 
         resolve();
       })
@@ -90,6 +103,86 @@ async function main() {
         reject(err);
       });
   });
+}
+
+async function main(): Promise<void> {
+  const program = new Command();
+
+  program
+    .name("befocused-processor")
+    .description("Process BeFocused CSV files and generate summaries")
+    .version("1.0.0")
+    .option(
+      "-i, --input <file>",
+      "Input CSV file path",
+      DEFAULT_INPUT_FILENAME
+    )
+    .option(
+      "-o, --output <file>",
+      "Output CSV file path",
+      DEFAULT_OUTPUT_FILENAME
+    )
+    .option(
+      "-d, --filter-date <date>",
+      "Filter by specific date (YYYY-MM-DD format, 'today', or 'yesterday')"
+    )
+    .option(
+      "-l, --lines <number>",
+      "Number of lines to display at the end",
+      (value) => {
+        const num = parseInt(value, 10);
+        if (isNaN(num) || num < 1) {
+          throw new Error("Lines must be a positive integer");
+        }
+        return num;
+      },
+      DEFAULT_OUTPUT_LINES
+    )
+    .option(
+      "-h, --help",
+      "Display help information"
+    );
+
+  program.parse();
+
+  const options = program.opts() as ProcessOptions;
+
+  try {
+    const inputPath = path.isAbsolute(options.input)
+      ? options.input
+      : path.resolve(process.cwd(), options.input);
+
+    if (!fs.existsSync(inputPath)) {
+      console.error(`Error: Input file does not exist: ${inputPath}`);
+      process.exit(1);
+    }
+
+    if (options.filterDate) {
+      if (options.filterDate === "today") {
+        options.filterDate = dayjs().format("YYYY-MM-DD");
+      } else if (options.filterDate === "yesterday") {
+        options.filterDate = dayjs().subtract(1, "day").format("YYYY-MM-DD");
+      } else {
+        const dateCheck = dayjs(options.filterDate, "YYYY-MM-DD", true);
+        if (!dateCheck.isValid()) {
+          console.error(`Error: Invalid date format. Please use YYYY-MM-DD format, 'today', or 'yesterday'.`);
+          process.exit(1);
+        }
+      }
+    }
+
+    console.log("Processing with options:", {
+      input: options.input,
+      output: options.output,
+      filterDate: options.filterDate || "none",
+      lines: options.lines
+    });
+
+    await processCsv(options);
+  } catch (error) {
+    console.error("An error occurred:", error);
+    process.exit(1);
+  }
 }
 
 void main().catch((err) => {
