@@ -30,6 +30,7 @@ interface ProcessOptions {
   output: string;
   filterDate?: string;
   lines: number;
+  hours?: boolean;
 }
 
 async function processCsv(options: ProcessOptions): Promise<void> {
@@ -80,10 +81,16 @@ async function processCsv(options: ProcessOptions): Promise<void> {
         summary[key] = (summary[key] ?? 0) + durationNum;
       })
       .on("end", () => {
-        const header = "Date,Assigned task,Duration\n";
+        // Prepare header and values: minutes or hours
+        const header = options.hours
+          ? "Date,Assigned task,Duration (hours)\n"
+          : "Date,Assigned task,Duration\n";
         const lines = Object.entries(summary)
           .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-          .map(([key, total]) => `${key},${total}`)
+          .map(([key, total]) => {
+            const value = options.hours ? (total / 60).toFixed(2) : total;
+            return `${key},${value}`;
+          })
           .join("\n");
 
         fs.writeFileSync(OUTPUT_FILE, header + lines);
@@ -92,8 +99,20 @@ async function processCsv(options: ProcessOptions): Promise<void> {
 
         const allLines = lines.split('\n');
         const displayLines = allLines.slice(-options.lines);
+
         console.log(`\n=== Last ${options.lines} Lines ===`);
         console.log(displayLines.join('\n'));
+        // If a date filter is applied, display total for that date
+        if (options.filterDate) {
+          const totalForDate = Object.entries(summary)
+            .filter(([key]) => key.startsWith(`${options.filterDate},`))
+            .reduce((sum, [, value]) => sum + value, 0);
+          if (options.hours) {
+            console.log(`Total for ${options.filterDate}: ${(totalForDate / 60).toFixed(2)} hours`);
+          } else {
+            console.log(`Total for ${options.filterDate}: ${totalForDate} minutes`);
+          }
+        }
 
         resolve();
       })
@@ -139,6 +158,10 @@ async function main(): Promise<void> {
       DEFAULT_OUTPUT_LINES
     )
     .option(
+      "-H, --hours",
+      "Display durations in hours instead of minutes"
+    )
+    .option(
       "-h, --help",
       "Display help information"
     );
@@ -146,6 +169,7 @@ async function main(): Promise<void> {
   program.parse();
 
   const options = program.opts() as ProcessOptions;
+  options.hours = Boolean(options.hours);
 
   try {
     const inputPath = path.isAbsolute(options.input)

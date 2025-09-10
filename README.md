@@ -14,27 +14,6 @@ Summarize **BeFocused** export CSV logs by **date and task**, producing a clean 
 * Configurable output display lines
 * Outputs clean CSV: `Date,Assigned task,Duration`
 
-## Input CSV (expected headers)
-
-```
-Start date,Duration,Assigned task,Task state
-15 Nov 2025 at 4:45:12 AM,37,Work,In Progress
-...
-```
-
-* **Start date**: e.g. `D MMM YYYY at h:mm:ss A` (fallback accepts without `at`)
-* **Duration**: number (minutes)
-* **Assigned task**: string
-* **Task state**: ignored by the summarizer
-
-## Output CSV
-
-```
-Date,Assigned task,Duration
-2025-11-15,Other,50
-...
-```
-
 ## Install
 
 ```bash
@@ -60,6 +39,9 @@ npm start -- -i mydata.csv -o result.csv -d today -l 100
 
 # Filter for yesterday's data only
 npm start -- -i mydata.csv -o result.csv -d yesterday -l 100
+
+# Display durations in hours
+npm start -- -i mydata.csv -o result.csv -d today -H
 ```
 
 ### Command Line Options
@@ -70,6 +52,7 @@ npm start -- -i mydata.csv -o result.csv -d yesterday -l 100
 | `--output` | `-o` | Output CSV file path | `output.csv` |
 | `--filter-date` | `-d` | Filter by date (`YYYY-MM-DD`, `today`, or `yesterday`) | No filter |
 | `--lines` | `-l` | Number of lines to display at the end | `500` |
+| `--hours` | `-H` | Display durations in hours instead of minutes | minutes |
 | `--help` | `-h` | Display help information | - |
 
 The script writes the summary to the specified output file (default: `output.csv`) and displays:
@@ -80,6 +63,27 @@ The summary has been saved to: /absolute/path/output.csv
 === Last 500 Lines ===
 2025-11-15,Task A,120
 2025-11-15,Task B,90
+...
+```
+
+## Input CSV (expected headers)
+
+```
+Start date,Duration,Assigned task,Task state
+15 Nov 2025 at 4:45:12 AM,37,Work,In Progress
+...
+```
+
+* **Start date**: e.g. `D MMM YYYY at h:mm:ss A` (fallback accepts without `at`)
+* **Duration**: number (minutes)
+* **Assigned task**: string
+* **Task state**: ignored by the summarizer
+
+## Output CSV
+
+```
+Date,Assigned task,Duration
+2025-11-15,Other,50
 ...
 ```
 
